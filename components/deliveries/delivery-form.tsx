@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { Loader2, Plus, Printer, Trash2 } from "lucide-react";
+import { Loader2, Plus, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { createDelivery } from "@/actions/deliveries";
@@ -19,8 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ProductPicker, type PickableProduct } from "@/components/operations/product-picker";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { type PickableProduct } from "@/components/operations/product-picker";
+import { DeliveryLineRow } from "@/components/deliveries/delivery-line-row";
 
 type Option = { id: string; name: string };
 type LocationOption = { id: string; name: string; warehouse_id: string };
@@ -260,47 +261,22 @@ export function DeliveryForm({
             </TableHeader>
             <TableBody>
               {fields.map((field, index) => {
-                const selectedProduct = products.find((p) => p.id === items?.[index]?.product_id);
                 const excludeIds = (items ?? [])
                   .filter((_, i) => i !== index)
                   .map((i) => i.product_id)
                   .filter(Boolean);
                 return (
-                  <TableRow key={field.id}>
-                    <TableCell className="align-top">
-                      <Controller
-                        control={form.control}
-                        name={`items.${index}.product_id`}
-                        render={({ field: f }) => (
-                          <ProductPicker products={products} excludeIds={excludeIds} value={f.value} onChange={(productId) => f.onChange(productId)} />
-                        )}
-                      />
-                      <FieldError errors={[form.formState.errors.items?.[index]?.product_id]} />
-                    </TableCell>
-                    <TableCell className="align-top">
-                      <Input
-                        type="number"
-                        step="0.001"
-                        min="0"
-                        aria-invalid={!!form.formState.errors.items?.[index]?.quantity}
-                        {...form.register(`items.${index}.quantity`)}
-                      />
-                      {selectedProduct && <span className="mt-1 block text-xs text-muted-foreground">{selectedProduct.unit_of_measure}</span>}
-                      <FieldError errors={[form.formState.errors.items?.[index]?.quantity]} />
-                    </TableCell>
-                    <TableCell className="align-top">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={fields.length === 1}
-                        onClick={() => remove(index)}
-                        aria-label="Remove row"
-                      >
-                        <Trash2 className="text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <DeliveryLineRow
+                    key={field.id}
+                    index={index}
+                    control={form.control}
+                    errors={form.formState.errors}
+                    products={products}
+                    excludeIds={excludeIds}
+                    locationId={form.watch("location_id")}
+                    canRemove={fields.length > 1}
+                    onRemove={() => remove(index)}
+                  />
                 );
               })}
             </TableBody>

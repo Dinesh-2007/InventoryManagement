@@ -206,7 +206,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                           </Link>
                         ) : (
                           <span className="text-muted-foreground">
-                            {m.reference_type === "product" ? "Initial stock" : "—"}
+                            {m.reference_type === "product" || m.reference_type === "seed" ? "Opening balance" : "—"}
                           </span>
                         )}
                       </TableCell>
