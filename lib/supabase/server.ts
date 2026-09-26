@@ -1,21 +1,15 @@
 import "server-only";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./env";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "./env";
 
-/** Request-scoped client acting as the signed-in user (RLS applies). */
-export async function createClient() {
-  const cookieStore = await cookies();
-  return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll: () => cookieStore.getAll(),
-      setAll: (toSet) => {
-        try {
-          toSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        } catch {
-          // Called from a Server Component: the proxy refreshes the session instead.
-        }
-      },
-    },
+/**
+ * Server-side Supabase client using the service role key.
+ * Auth (authentication / session) is handled by Clerk; this client bypasses
+ * Supabase RLS so all server components and server actions can read/write data
+ * without a Supabase session token. Never import in client components.
+ */
+export function createClient() {
+  return createSupabaseClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 }

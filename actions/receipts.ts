@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/action-result";
@@ -24,12 +25,10 @@ export async function createReceipt(
   const parsed = receiptSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "You must be signed in to perform this action." };
+  const clerkUser = await currentUser();
+  if (!clerkUser) return { ok: false, error: "You must be signed in to perform this action." };
 
+  const supabase = createClient();
   const { supplier_id, warehouse_id, location_id, scheduled_date, responsible_id, notes, items } = parsed.data;
 
   const { data: receipt, error: receiptError } = await supabase
@@ -39,9 +38,9 @@ export async function createReceipt(
       warehouse_id,
       location_id,
       scheduled_date,
-      responsible_id: responsible_id ?? user.id,
+      responsible_id: responsible_id ?? null,
       notes: notes?.trim() || null,
-      created_by: user.id,
+      created_by: null,
     })
     .select("id, reference")
     .single();
@@ -85,7 +84,7 @@ export async function createReceipt(
 }
 
 export async function confirmReceiptAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("confirm_receipt", { p_receipt_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "receipt") };
   revalidatePath("/operations/receipts");
@@ -94,7 +93,7 @@ export async function confirmReceiptAction(id: string): Promise<ActionResult> {
 }
 
 export async function completeReceiptAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("complete_receipt", { p_receipt_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "receipt") };
   revalidatePath("/operations/receipts");
@@ -103,7 +102,7 @@ export async function completeReceiptAction(id: string): Promise<ActionResult> {
 }
 
 export async function cancelReceiptAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("cancel_receipt", { p_receipt_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "receipt") };
   revalidatePath("/operations/receipts");

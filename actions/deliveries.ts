@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/action-result";
@@ -24,12 +25,10 @@ export async function createDelivery(
   const parsed = deliverySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "You must be signed in to perform this action." };
+  const clerkUser = await currentUser();
+  if (!clerkUser) return { ok: false, error: "You must be signed in to perform this action." };
 
+  const supabase = createClient();
   const {
     customer_id,
     delivery_address,
@@ -51,9 +50,9 @@ export async function createDelivery(
       warehouse_id,
       location_id,
       scheduled_date,
-      responsible_id: responsible_id ?? user.id,
+      responsible_id: responsible_id ?? null,
       notes: notes?.trim() || null,
-      created_by: user.id,
+      created_by: null,
     })
     .select("id, reference")
     .single();
@@ -94,7 +93,7 @@ export async function createDelivery(
 }
 
 export async function confirmDeliveryAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("confirm_delivery", { p_delivery_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "delivery") };
   revalidatePath("/operations/deliveries");
@@ -103,7 +102,7 @@ export async function confirmDeliveryAction(id: string): Promise<ActionResult> {
 }
 
 export async function completeDeliveryAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("complete_delivery", { p_delivery_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "delivery") };
   revalidatePath("/operations/deliveries");
@@ -112,7 +111,7 @@ export async function completeDeliveryAction(id: string): Promise<ActionResult> 
 }
 
 export async function cancelDeliveryAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("cancel_delivery", { p_delivery_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "delivery") };
   revalidatePath("/operations/deliveries");
@@ -121,7 +120,7 @@ export async function cancelDeliveryAction(id: string): Promise<ActionResult> {
 }
 
 export async function recheckDeliveryAvailabilityAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("recompute_delivery_readiness", { p_delivery_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "delivery") };
   revalidatePath("/operations/deliveries");
