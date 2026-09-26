@@ -37,36 +37,39 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </aside>
 
       <div className="lg:pl-60">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
-          <MobileNav role={user.role} />
-          <div className="lg:hidden">
-            <Logo compact />
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+          <div className="flex items-center gap-2 flex-1 max-w-lg">
+            <MobileNav role={user.role} />
+            <div className="lg:hidden">
+              <Logo compact />
+            </div>
+            <TopbarSearch className="w-full max-w-md" />
           </div>
 
-          <TopbarSearch className="ml-auto max-w-md flex-1 lg:ml-0" />
-
-          <Button variant="ghost" size="icon" className="shrink-0" aria-label="Notifications">
-            <Bell className="size-4" />
-          </Button>
-
-          <Show when="signed-out">
-            <Button variant="ghost" size="sm" render={<Link href="/sign-in" />} nativeButton={false}>
-              Sign In
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Notifications">
+              <Bell className="size-4" />
             </Button>
-            <Button size="sm" render={<Link href="/signup" />} nativeButton={false}>
-              Sign Up
-            </Button>
-          </Show>
 
-          <Show when="signed-in">
-            <div className="flex items-center gap-3">
-              <div className="hidden leading-tight text-right sm:block">
-                <div className="text-sm font-medium">{fullName}</div>
-                <div className="text-xs text-muted-foreground">{roleLabel}</div>
+            <Show when="signed-out">
+              <Button variant="ghost" size="sm" render={<Link href="/sign-in" />} nativeButton={false}>
+                Sign In
+              </Button>
+              <Button size="sm" render={<Link href="/signup" />} nativeButton={false}>
+                Sign Up
+              </Button>
+            </Show>
+
+            <Show when="signed-in">
+              <div className="flex items-center gap-3">
+                <div className="hidden leading-tight text-right sm:block">
+                  <div className="text-sm font-semibold text-foreground">{fullName}</div>
+                  <div className="text-xs text-muted-foreground">{roleLabel}</div>
+                </div>
+                <UserButton />
               </div>
-              <UserButton />
-            </div>
-          </Show>
+            </Show>
+          </div>
         </header>
 
         <main className="mx-auto max-w-[1400px] p-4 sm:p-6">{children}</main>
