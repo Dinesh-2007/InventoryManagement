@@ -15,7 +15,7 @@ const PAGE_SIZE = 20;
 type SearchParams = { q?: string; category?: string; stock?: string; sort?: string; page?: string };
 
 export async function ProductsTable({ searchParams }: { searchParams: SearchParams }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   const q = sanitizeSearch(searchParams.q);
   const categoryId = searchParams.category || undefined;
   const stockFilter = searchParams.stock || undefined;

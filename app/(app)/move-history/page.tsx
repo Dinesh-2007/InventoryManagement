@@ -44,7 +44,7 @@ export default async function MoveHistoryPage({ searchParams }: { searchParams: 
   const to = typeof sp.to === "string" ? sp.to : undefined;
   const sort = typeof sp.sort === "string" ? sp.sort : "newest";
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: warehouses } = await supabase.from("warehouses").select("id,name").order("name");
 
   return (
@@ -98,7 +98,7 @@ async function MoveHistoryTable({ page, q, type, status, warehouse, from, to, so
   page: number; q: string; type?: string; status?: string; warehouse?: string; from?: string; to?: string; sort: string;
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("move_history_view")
     .select("*", { count: "exact" })

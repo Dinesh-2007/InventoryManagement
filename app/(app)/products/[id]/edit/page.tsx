@@ -7,7 +7,7 @@ export const metadata = { title: "Edit Product | StockSense" };
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const [productRes, categoriesRes] = await Promise.all([
     supabase

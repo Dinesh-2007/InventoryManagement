@@ -43,7 +43,7 @@ export default async function WarehousesPage({ searchParams }: { searchParams: P
 }
 
 async function WarehousesTable({ page, q, searchParams }: { page: number; q: string; searchParams: Record<string, string | string[] | undefined> }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("warehouses")
     .select("id,name,short_code,address,active", { count: "exact" })

@@ -52,7 +52,7 @@ export default async function DeliveriesPage({
   const to = typeof sp.to === "string" ? sp.to : undefined;
   const page = parsePage(sp.page);
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: warehouses } = await supabase.from("warehouses").select("id, name").eq("active", true).order("name");
 
   let customerIds: string[] = [];

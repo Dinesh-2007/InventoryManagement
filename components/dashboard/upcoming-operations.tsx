@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 type Op = { id: string; reference: string; scheduled_date: string; status: "draft" | "waiting" | "ready" | "done" | "canceled"; type: "receipt" | "delivery" };
 
 export async function UpcomingOperations() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const today = businessToday();
 
   const [{ data: receipts, error: rErr }, { data: deliveries, error: dErr }] = await Promise.all([

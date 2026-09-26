@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { AdjustmentForm } from "@/components/adjustments/adjustment-form";
 
 export default async function NewAdjustmentPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const [{ data: warehouses }, { data: locations }, { data: products }] = await Promise.all([
     supabase.from("warehouses").select("id,name,short_code").eq("active", true).order("name"),
     supabase.from("locations").select("id,name,short_code,warehouse_id").eq("active", true).order("name"),

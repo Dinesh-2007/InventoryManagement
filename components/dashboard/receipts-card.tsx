@@ -5,7 +5,7 @@ import { safeCount } from "./safe-count";
 import { OperationCard } from "./operation-card";
 
 export async function ReceiptsCard() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const today = businessToday();
 
   const [toReceive, late, total] = await Promise.all([

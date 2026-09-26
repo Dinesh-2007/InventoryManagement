@@ -5,7 +5,7 @@ import { LocationForm } from "@/components/settings/location-form";
 
 export default async function EditLocationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
   const [{ data: location }, { data: warehouses }] = await Promise.all([
     supabase.from("locations").select("id,name,short_code,warehouse_id").eq("id", id).maybeSingle(),
     supabase.from("warehouses").select("id,name").order("name"),

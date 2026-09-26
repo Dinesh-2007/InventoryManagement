@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
+import { currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/action-result";
@@ -34,11 +35,9 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
   }
   const { data } = parsed;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "You must be signed in to perform this action." };
+  const supabase = createClient();
+  const clerkUser = await currentUser();
+  if (!clerkUser) return { ok: false, error: "You must be signed in to perform this action." };
 
   const initialStock = data.initial_stock ?? 0;
 
@@ -54,7 +53,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
       reorder_quantity: data.reorder_quantity,
       initial_stock: initialStock,
       description: data.description || null,
-      created_by: user.id,
+      created_by: null,
     })
     .select("id")
     .single();
@@ -97,7 +96,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
       quantity: initialStock,
       reference_type: "product",
       reference_id: product.id,
-      performed_by: user.id,
+      performed_by: null,
     });
     if (ledgerError) console.error("[createProduct] stock_ledger insert failed", ledgerError);
   }
@@ -113,7 +112,7 @@ export async function updateProduct(id: string, input: ProductUpdateInput): Prom
   }
   const { data } = parsed;
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase
     .from("products")
     .update({
@@ -147,7 +146,7 @@ export async function updateReorderRule(id: string, input: ReorderRuleInput): Pr
     return { ok: false, error: parsed.error.issues[0].message, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase
     .from("products")
     .update({ reorder_point: parsed.data.reorder_point, reorder_quantity: parsed.data.reorder_quantity })
@@ -160,7 +159,7 @@ export async function updateReorderRule(id: string, input: ReorderRuleInput): Pr
 }
 
 export async function setProductActive(id: string, active: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("products").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setProductActive") };
   revalidateProductPaths(id);

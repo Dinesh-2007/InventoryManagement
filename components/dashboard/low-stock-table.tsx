@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 type Row = { product_id: string; name: string; sku: string; unit_of_measure: string; free_to_use: number | string; reorder_point: number | string; active: boolean };
 
 export async function LowStockTable() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("stock_overview")
     .select("product_id,name,sku,unit_of_measure,free_to_use,reorder_point,active")

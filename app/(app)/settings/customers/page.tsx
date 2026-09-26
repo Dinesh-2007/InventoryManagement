@@ -39,7 +39,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
 }
 
 async function CustomersTable({ page, q, searchParams }: { page: number; q: string; searchParams: Record<string, string | string[] | undefined> }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("customers")
     .select("id,name,contact_person,phone,email,address,active", { count: "exact" })

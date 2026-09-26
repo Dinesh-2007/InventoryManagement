@@ -32,7 +32,7 @@ type LedgerRow = { id: string; quantity: number; product: { name: string } | nul
 
 export default async function TransferDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: transfer, error } = await supabase
     .from("internal_transfers")

@@ -20,7 +20,7 @@ function referenceHref(type: string, id: string) {
 type Row = { id: string; reference: string | null; reference_type: string; reference_id: string; product_name: string; quantity: number; created_at: string };
 
 export async function RecentMovements() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase.from("move_history_view").select("*").order("created_at", { ascending: false }).limit(8);
   if (error) console.error("[dashboard] move_history_view unavailable for recent movements", error);
   const rows = (error ? [] : (data ?? [])) as Row[];

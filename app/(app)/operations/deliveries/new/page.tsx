@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/page-header";
 import { DeliveryForm } from "@/components/deliveries/delivery-form";
@@ -7,11 +6,7 @@ import { DeliveryForm } from "@/components/deliveries/delivery-form";
 export const metadata: Metadata = { title: "New Delivery" };
 
 export default async function NewDeliveryPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const supabase = createClient();
 
   const [{ data: customers }, { data: warehouses }, { data: locations }, { data: products }, { data: profiles }] = await Promise.all([
     supabase.from("customers").select("id, name, address").eq("active", true).order("name"),
@@ -34,7 +29,7 @@ export default async function NewDeliveryPage() {
         locations={locations ?? []}
         products={products ?? []}
         profiles={profiles ?? []}
-        currentUserId={user.id}
+        currentUserId={null}
       />
     </div>
   );

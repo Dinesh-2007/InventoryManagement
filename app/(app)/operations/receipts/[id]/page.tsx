@@ -66,7 +66,7 @@ function Timeline({ steps }: { steps: { label: string; at: string | null; reache
 
 export default async function ReceiptDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data, error } = await supabase
     .from("receipts")

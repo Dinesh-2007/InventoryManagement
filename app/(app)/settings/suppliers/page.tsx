@@ -39,7 +39,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
 }
 
 async function SuppliersTable({ page, q, searchParams }: { page: number; q: string; searchParams: Record<string, string | string[] | undefined> }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("suppliers")
     .select("id,name,contact_person,phone,email,address,active", { count: "exact" })

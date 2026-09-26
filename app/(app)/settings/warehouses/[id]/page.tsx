@@ -5,7 +5,7 @@ import { WarehouseForm } from "@/components/settings/warehouse-form";
 
 export default async function EditWarehousePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: warehouse } = await supabase.from("warehouses").select("id,name,short_code,address").eq("id", id).maybeSingle();
   if (!warehouse) notFound();
 

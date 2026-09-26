@@ -14,7 +14,7 @@ export const metadata = { title: "Categories | StockSense" };
 export default async function CategoriesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q: rawQ } = await searchParams;
   const q = sanitizeSearch(rawQ);
-  const supabase = await createClient();
+  const supabase = createClient();
 
   let categoriesQuery = supabase.from("product_categories").select("id,name,description,active").order("name");
   if (q) categoriesQuery = categoriesQuery.ilike("name", `%${q}%`);

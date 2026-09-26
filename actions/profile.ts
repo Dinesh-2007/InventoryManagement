@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/action-result";
@@ -10,13 +11,10 @@ export async function updateProfile(input: UpdateProfileInput): Promise<ActionRe
   const parsed = updateProfileSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) return { ok: false, error: "Your session has expired. Please sign in again." };
+  const clerkUser = await currentUser();
+  if (!clerkUser) return { ok: false, error: "Your session has expired. Please sign in again." };
 
+  const supabase = createClient();
   const { fullName, phone, avatarUrl } = parsed.data;
   const { error } = await supabase
     .from("profiles")
@@ -25,7 +23,7 @@ export async function updateProfile(input: UpdateProfileInput): Promise<ActionRe
       phone: phone ? phone : null,
       avatar_url: avatarUrl ? avatarUrl : null,
     })
-    .eq("id", user.id);
+    .eq("id", clerkUser.id);
 
   if (error) return { ok: false, error: friendlyDbError(error, "profile update") };
 

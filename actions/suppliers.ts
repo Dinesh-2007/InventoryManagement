@@ -20,7 +20,7 @@ export async function createSupplier(input: SupplierInput): Promise<ActionResult
   const parsed = supplierSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase.from("suppliers").insert(toRow(parsed.data)).select("id").single();
   if (error) return { ok: false, error: friendlyDbError(error, "createSupplier") };
 
@@ -32,7 +32,7 @@ export async function updateSupplier(id: string, input: SupplierInput): Promise<
   const parsed = supplierSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("suppliers").update(toRow(parsed.data)).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "updateSupplier") };
 
@@ -41,7 +41,7 @@ export async function updateSupplier(id: string, input: SupplierInput): Promise<
 }
 
 export async function setSupplierActive(id: string, active: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("suppliers").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setSupplierActive") };
 

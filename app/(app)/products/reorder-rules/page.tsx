@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export const metadata = { title: "Reorder Rules | StockSense" };
 
 export default async function ReorderRulesPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const [rows, categoriesRes] = await Promise.all([
     fetchStockOverview(supabase),
     supabase.from("product_categories").select("id,name"),

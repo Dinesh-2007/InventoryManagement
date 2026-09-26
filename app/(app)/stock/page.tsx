@@ -14,7 +14,7 @@ type SearchParams = { q?: string; category?: string };
 
 export default async function StockPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams;
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: categories, error } = await supabase.from("product_categories").select("id,name").eq("active", true).order("name");
   if (error) console.error("[stock] categories query failed", error.message);
 

@@ -6,7 +6,7 @@ import { KpiCard } from "./kpi-card";
 type StockRow = { free_to_use: number | string; reorder_point: number | string; active: boolean };
 
 export async function KpiRow() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const [totalProducts, pendingReceipts, pendingDeliveries, transfersScheduled, stockResult] = await Promise.all([
     safeCount(supabase.from("products").select("id", { count: "exact", head: true }).eq("active", true)),

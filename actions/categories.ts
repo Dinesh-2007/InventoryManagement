@@ -10,7 +10,7 @@ export async function createCategory(input: CategoryInput): Promise<ActionResult
   const parsed = categorySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("product_categories")
     .insert({
@@ -33,7 +33,7 @@ export async function updateCategory(id: string, input: CategoryInput): Promise<
   const parsed = categorySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase
     .from("product_categories")
     .update({
@@ -52,7 +52,7 @@ export async function updateCategory(id: string, input: CategoryInput): Promise<
 }
 
 export async function setCategoryActive(id: string, active: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("product_categories").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setCategoryActive") };
   revalidatePath("/products/categories");

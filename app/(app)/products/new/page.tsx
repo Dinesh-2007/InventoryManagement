@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata = { title: "New Product | StockSense" };
 
 async function loadOptions() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const [categoriesRes, locationsRes] = await Promise.all([
     supabase.from("product_categories").select("id,name").eq("active", true).order("name"),

@@ -17,7 +17,7 @@ export async function createLocation(input: LocationInput): Promise<ActionResult
   const parsed = locationSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("locations")
     .insert({ name: parsed.data.name, short_code: parsed.data.shortCode, warehouse_id: parsed.data.warehouseId })
@@ -35,7 +35,7 @@ export async function updateLocation(id: string, input: LocationInput): Promise<
 
   // warehouse_id is intentionally not sent: a DB trigger locks it after creation
   // (a location can't move warehouses — create a new one instead).
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase
     .from("locations")
     .update({ name: parsed.data.name, short_code: parsed.data.shortCode })
@@ -48,7 +48,7 @@ export async function updateLocation(id: string, input: LocationInput): Promise<
 }
 
 export async function setLocationActive(id: string, active: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("locations").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setLocationActive") };
 

@@ -20,7 +20,7 @@ export async function createCustomer(input: CustomerInput): Promise<ActionResult
   const parsed = customerSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase.from("customers").insert(toRow(parsed.data)).select("id").single();
   if (error) return { ok: false, error: friendlyDbError(error, "createCustomer") };
 
@@ -32,7 +32,7 @@ export async function updateCustomer(id: string, input: CustomerInput): Promise<
   const parsed = customerSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("customers").update(toRow(parsed.data)).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "updateCustomer") };
 
@@ -41,7 +41,7 @@ export async function updateCustomer(id: string, input: CustomerInput): Promise<
 }
 
 export async function setCustomerActive(id: string, active: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("customers").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setCustomerActive") };
 

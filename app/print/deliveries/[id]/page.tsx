@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Print Delivery" };
 
 export default async function PrintDeliveryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data } = await supabase
     .from("deliveries")

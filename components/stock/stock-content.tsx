@@ -4,7 +4,7 @@ import { sanitizeSearch } from "@/lib/format";
 import { StockView } from "@/components/stock/stock-view";
 
 export async function StockContent({ searchParams }: { searchParams: { q?: string; category?: string } }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   const q = sanitizeSearch(searchParams.q);
   const categoryId = searchParams.category || undefined;
 

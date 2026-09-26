@@ -7,7 +7,7 @@ const COLORS = { in_stock: "#10b981", low_stock: "#f59e0b", out_of_stock: "#f43f
 type StockRow = { free_to_use: number | string; reorder_point: number | string; active: boolean };
 
 export async function StockDonutSection() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase.from("stock_overview").select("free_to_use,reorder_point,active");
   if (error) console.error("[dashboard] stock_overview unavailable for donut", error);
   const rows = (data ?? []) as StockRow[];

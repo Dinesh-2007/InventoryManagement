@@ -35,7 +35,7 @@ export async function createWarehouse(input: WarehouseInput): Promise<ActionResu
   const parsed = warehouseSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("warehouses")
     .insert({ name: parsed.data.name, short_code: parsed.data.shortCode, address: parsed.data.address || null })
@@ -54,7 +54,7 @@ export async function updateWarehouse(id: string, input: WarehouseInput): Promis
   const parsed = warehouseSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase
     .from("warehouses")
     .update({ name: parsed.data.name, short_code: parsed.data.shortCode, address: parsed.data.address || null })
@@ -70,7 +70,7 @@ export async function updateWarehouse(id: string, input: WarehouseInput): Promis
 }
 
 export async function setWarehouseActive(id: string, active: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.from("warehouses").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setWarehouseActive") };
 

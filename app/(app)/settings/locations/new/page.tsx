@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { LocationForm } from "@/components/settings/location-form";
 
 export default async function NewLocationPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: warehouses } = await supabase.from("warehouses").select("id,name").eq("active", true).order("name");
 
   return (

@@ -9,16 +9,12 @@ import { transferSchema, type TransferInput } from "@/lib/validations/transfers"
 /**
  * Inserts a draft transfer + its items. When `mode` is "validate" it also
  * calls the `confirm_transfer` RPC (draft -> ready) in the same request.
- * `confirm_transfer`/`complete_transfer`/`cancel_transfer` are owned by the DB
- * agent's migration; until it lands these calls will fail with a normal
- * PostgREST "function not found" error, surfaced via friendlyDbError.
  */
 export async function createTransfer(input: TransferInput, mode: "draft" | "validate"): Promise<ActionResult<{ id: string }>> {
   const parsed = transferSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
+  const supabase = createClient();
 
   const { data: transfer, error } = await supabase
     .from("internal_transfers")
@@ -28,9 +24,9 @@ export async function createTransfer(input: TransferInput, mode: "draft" | "vali
       dest_warehouse_id: parsed.data.destWarehouseId,
       dest_location_id: parsed.data.destLocationId,
       scheduled_date: parsed.data.scheduledDate,
-      responsible_id: parsed.data.responsibleId || auth?.user?.id || null,
+      responsible_id: parsed.data.responsibleId || null,
       notes: parsed.data.notes || null,
-      created_by: auth?.user?.id ?? null,
+      created_by: null,
     })
     .select("id")
     .single();
@@ -54,7 +50,7 @@ export async function createTransfer(input: TransferInput, mode: "draft" | "vali
 }
 
 export async function confirmTransferAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("confirm_transfer", { p_transfer_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "confirmTransfer") };
 
@@ -64,7 +60,7 @@ export async function confirmTransferAction(id: string): Promise<ActionResult> {
 }
 
 export async function completeTransferAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("complete_transfer", { p_transfer_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "completeTransfer") };
 
@@ -74,7 +70,7 @@ export async function completeTransferAction(id: string): Promise<ActionResult> 
 }
 
 export async function cancelTransferAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("cancel_transfer", { p_transfer_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "cancelTransfer") };
 

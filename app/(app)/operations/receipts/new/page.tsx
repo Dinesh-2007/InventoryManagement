@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/page-header";
 import { ReceiptForm } from "@/components/receipts/receipt-form";
@@ -7,11 +6,7 @@ import { ReceiptForm } from "@/components/receipts/receipt-form";
 export const metadata: Metadata = { title: "New Receipt" };
 
 export default async function NewReceiptPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const supabase = createClient();
 
   const [{ data: suppliers }, { data: warehouses }, { data: locations }, { data: products }, { data: profiles }] = await Promise.all([
     supabase.from("suppliers").select("id, name").eq("active", true).order("name"),
@@ -34,7 +29,7 @@ export default async function NewReceiptPage() {
         locations={locations ?? []}
         products={products ?? []}
         profiles={profiles ?? []}
-        currentUserId={user.id}
+        currentUserId={null}
       />
     </div>
   );

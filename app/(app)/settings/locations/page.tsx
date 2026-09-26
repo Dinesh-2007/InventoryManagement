@@ -23,7 +23,7 @@ export default async function LocationsPage({ searchParams }: { searchParams: Pr
   const q = sanitizeSearch(typeof sp.q === "string" ? sp.q : undefined);
   const warehouse = typeof sp.warehouse === "string" ? sp.warehouse : undefined;
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: warehouses } = await supabase.from("warehouses").select("id,name").order("name");
 
   return (
@@ -51,7 +51,7 @@ export default async function LocationsPage({ searchParams }: { searchParams: Pr
 async function LocationsTable({ page, q, warehouse, searchParams }: {
   page: number; q: string; warehouse?: string; searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("locations")
     .select("id,name,short_code,active,warehouse:warehouses!locations_warehouse_id_fkey(id,name)", { count: "exact" });

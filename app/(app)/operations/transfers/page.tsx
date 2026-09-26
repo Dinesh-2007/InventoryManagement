@@ -33,7 +33,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
   const status = typeof sp.status === "string" ? sp.status : undefined;
   const warehouse = typeof sp.warehouse === "string" ? sp.warehouse : undefined;
 
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: warehouses } = await supabase.from("warehouses").select("id,name").order("name");
 
   return (
@@ -72,7 +72,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
 async function TransfersTable({ page, q, status, warehouse, searchParams }: {
   page: number; q: string; status?: string; warehouse?: string; searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("internal_transfers")
     .select(

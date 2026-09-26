@@ -65,7 +65,7 @@ async function fetchMovements(
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const [productRes, locationRows, movements] = await Promise.all([
     supabase

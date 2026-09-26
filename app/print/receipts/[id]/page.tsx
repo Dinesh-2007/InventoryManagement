@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Print Receipt" };
 
 export default async function PrintReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data } = await supabase
     .from("receipts")

@@ -36,7 +36,7 @@ type LedgerRow = { id: string; quantity: number; product: { name: string } | nul
 
 export default async function AdjustmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: adjustment, error } = await supabase
     .from("stock_adjustments")

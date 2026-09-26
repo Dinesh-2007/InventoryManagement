@@ -68,7 +68,7 @@ type AdjustmentRow = {
 async function AdjustmentsTable({ page, q, status, reason, searchParams }: {
   page: number; q: string; status?: string; reason?: string; searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const supabase = await createClient();
+  const supabase = createClient();
   let query = supabase
     .from("stock_adjustments")
     .select(

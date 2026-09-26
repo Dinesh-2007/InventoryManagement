@@ -11,15 +11,12 @@ import { adjustmentSchema, type AdjustmentInput } from "@/lib/validations/adjust
  * and difference are filled server-side by `apply_adjustment`). When `mode` is
  * "validate" it applies immediately (draft -> done in one step); "draft" leaves
  * it pending for a manager to apply later from the detail page.
- * `apply_adjustment`/`cancel_adjustment` are owned by the DB agent's migration;
- * until it lands these calls fail with a normal PostgREST error.
  */
 export async function createAdjustment(input: AdjustmentInput, mode: "draft" | "validate"): Promise<ActionResult<{ id: string }>> {
   const parsed = adjustmentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
+  const supabase = createClient();
 
   const { data: adjustment, error } = await supabase
     .from("stock_adjustments")
@@ -28,8 +25,8 @@ export async function createAdjustment(input: AdjustmentInput, mode: "draft" | "
       location_id: parsed.data.locationId,
       reason: parsed.data.reason,
       notes: parsed.data.notes || null,
-      responsible_id: auth?.user?.id ?? null,
-      created_by: auth?.user?.id ?? null,
+      responsible_id: null,
+      created_by: null,
     })
     .select("id")
     .single();
@@ -53,7 +50,7 @@ export async function createAdjustment(input: AdjustmentInput, mode: "draft" | "
 }
 
 export async function applyAdjustmentAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("apply_adjustment", { p_adjustment_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "applyAdjustment") };
 
@@ -63,7 +60,7 @@ export async function applyAdjustmentAction(id: string): Promise<ActionResult> {
 }
 
 export async function cancelAdjustmentAction(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { error } = await supabase.rpc("cancel_adjustment", { p_adjustment_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "cancelAdjustment") };
 

@@ -41,7 +41,7 @@ export function DeliveryForm({
   locations: LocationOption[];
   products: PickableProduct[];
   profiles: ProfileOption[];
-  currentUserId: string;
+  currentUserId: string | null;
 }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
@@ -229,7 +229,7 @@ export function DeliveryForm({
             control={form.control}
             name="responsible_id"
             render={({ field }) => (
-              <NativeSelect id="responsible_id" value={field.value ?? currentUserId} onChange={(e) => field.onChange(e.target.value)}>
+              <NativeSelect id="responsible_id" value={field.value ?? currentUserId ?? ""} onChange={(e) => field.onChange(e.target.value)}>
                 {profiles.map((p) => (
                   <NativeSelectOption key={p.id} value={p.id}>
                     {p.id === currentUserId ? `${p.full_name} (you)` : p.full_name}
