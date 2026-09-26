@@ -18,6 +18,7 @@ import {
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { TopbarSearch } from "@/components/layout/topbar-search";
+import { LegalFooterLinks } from "@/components/shared/legal-links";
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -100,6 +101,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="mx-auto max-w-[1400px] p-4 sm:p-6">{children}</main>
+
+        <footer className="mx-auto flex max-w-[1400px] flex-col items-center gap-2 px-4 pb-6 text-xs text-muted-foreground no-print sm:flex-row sm:justify-between sm:px-6">
+          <LegalFooterLinks className="text-xs" />
+          <p>© {new Date().getFullYear()} StockSense</p>
+        </footer>
       </div>
     </div>
   );
