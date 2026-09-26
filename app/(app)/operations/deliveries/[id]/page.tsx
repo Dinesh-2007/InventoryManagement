@@ -102,7 +102,7 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
   if (delivery.status === "done") {
     const { data: ledgerRows, error: ledgerError } = await supabase
       .from("stock_ledger")
-      .select("id, quantity, created_at, product:products(name, sku, unit_of_measure), location:locations(name)")
+      .select("id, quantity, created_at, product:products(name, sku, unit_of_measure), location:locations!stock_ledger_location_id_fkey(name)")
       .eq("reference_type", "delivery")
       .eq("reference_id", id)
       .order("created_at", { ascending: true });

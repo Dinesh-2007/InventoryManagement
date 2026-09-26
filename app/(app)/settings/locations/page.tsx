@@ -106,7 +106,7 @@ async function LocationsTable({ page, q, warehouse, searchParams }: {
                   <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/settings/locations/${l.id}`} />} nativeButton={false}>
                     <Pencil />
                   </Button>
-                  <ToggleActiveButton active={l.active} label={l.name} onToggle={(next) => setLocationActive(l.id, next)} />
+                  <ToggleActiveButton active={l.active} label={l.name} onToggle={setLocationActive.bind(null, l.id)} />
                 </div>
               </TableCell>
             </TableRow>

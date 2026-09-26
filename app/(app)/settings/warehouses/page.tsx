@@ -94,7 +94,7 @@ async function WarehousesTable({ page, q, searchParams }: { page: number; q: str
                   <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/settings/warehouses/${w.id}`} />} nativeButton={false}>
                     <Pencil />
                   </Button>
-                  <ToggleActiveButton active={w.active} label={w.name} onToggle={(next) => setWarehouseActive(w.id, next)} />
+                  <ToggleActiveButton active={w.active} label={w.name} onToggle={setWarehouseActive.bind(null, w.id)} />
                 </div>
               </TableCell>
             </TableRow>

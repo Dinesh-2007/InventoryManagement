@@ -86,7 +86,7 @@ async function SuppliersTable({ page, q, searchParams }: { page: number; q: stri
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <SupplierFormDialog supplier={s} trigger={<Button variant="ghost" size="sm">Edit</Button>} />
-                  <ToggleActiveButton active={s.active} label={s.name} onToggle={(next) => setSupplierActive(s.id, next)} />
+                  <ToggleActiveButton active={s.active} label={s.name} onToggle={setSupplierActive.bind(null, s.id)} />
                 </div>
               </TableCell>
             </TableRow>

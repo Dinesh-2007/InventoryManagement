@@ -86,7 +86,7 @@ async function CustomersTable({ page, q, searchParams }: { page: number; q: stri
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <CustomerFormDialog customer={c} trigger={<Button variant="ghost" size="sm">Edit</Button>} />
-                  <ToggleActiveButton active={c.active} label={c.name} onToggle={(next) => setCustomerActive(c.id, next)} />
+                  <ToggleActiveButton active={c.active} label={c.name} onToggle={setCustomerActive.bind(null, c.id)} />
                 </div>
               </TableCell>
             </TableRow>
