@@ -26,7 +26,10 @@ async function loadOptions() {
   return { categories, locations };
 }
 
+import { requireManager } from "@/lib/auth/server";
+
 export default async function NewProductPage() {
+  await requireManager();
   const { categories, locations } = await loadOptions();
 
   return (

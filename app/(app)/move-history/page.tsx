@@ -33,7 +33,10 @@ function referenceHref(type: string, id: string) {
   }
 }
 
+import { getCurrentUserAccess } from "@/lib/auth/server";
+
 export default async function MoveHistoryPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const access = await getCurrentUserAccess();
   const sp = await searchParams;
   const page = parsePage(sp.page);
   const q = sanitizeSearch(typeof sp.q === "string" ? sp.q : undefined);
@@ -45,11 +48,15 @@ export default async function MoveHistoryPage({ searchParams }: { searchParams: 
   const sort = typeof sp.sort === "string" ? sp.sort : "newest";
 
   const supabase = createClient();
-  const { data: warehouses } = await supabase.from("warehouses").select("id,name").order("name");
+  let whQuery = supabase.from("warehouses").select("id,name").order("name");
+  if (!access.isManager && access.warehouseIds.length > 0) {
+    whQuery = whQuery.in("id", access.warehouseIds);
+  }
+  const { data: warehouses } = await whQuery;
 
   return (
     <div>
-      <PageHeader title="Move History" description="Every stock movement across receipts, deliveries, transfers and adjustments" />
+      <PageHeader title="Move History" description={access.isManager ? "Every stock movement across receipts, deliveries, transfers and adjustments" : "Stock movements across your assigned facilities"} />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <UrlSearchInput placeholder="Search reference, product, contact…" />
         <UrlSelect
@@ -98,11 +105,16 @@ async function MoveHistoryTable({ page, q, type, status, warehouse, from, to, so
   page: number; q: string; type?: string; status?: string; warehouse?: string; from?: string; to?: string; sort: string;
   searchParams: Record<string, string | string[] | undefined>;
 }) {
+  const access = await getCurrentUserAccess();
   const supabase = createClient();
   let query = supabase
     .from("move_history_view")
     .select("*", { count: "exact" })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+
+  if (!access.isManager && access.warehouseIds.length > 0) {
+    query = query.in("warehouse_id", access.warehouseIds);
+  }
 
   if (q) query = query.or(`reference.ilike.%${q}%,product_name.ilike.%${q}%,contact_name.ilike.%${q}%`);
   if (type) query = query.eq("reference_type", type);

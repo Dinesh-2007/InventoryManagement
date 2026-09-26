@@ -9,9 +9,12 @@ import { CategoryRowActions } from "@/components/products/category-row-actions";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeSearch } from "@/lib/format";
 
+import { requireManager } from "@/lib/auth/server";
+
 export const metadata = { title: "Categories | StockSense" };
 
 export default async function CategoriesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  await requireManager();
   const { q: rawQ } = await searchParams;
   const q = sanitizeSearch(rawQ);
   const supabase = createClient();

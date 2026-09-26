@@ -21,6 +21,9 @@ export const signupSchema = z
       .string()
       .trim()
       .regex(/^[A-Za-z0-9._-]{3,32}$/, "3–32 characters: letters, numbers, dot, dash or underscore"),
+    role: z.enum(["inventory_manager", "warehouse_staff"], {
+      message: "Select a role",
+    }),
     password: passwordSchema,
     confirmPassword: z.string(),
   })

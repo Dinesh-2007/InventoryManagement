@@ -5,7 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Edit Product | StockSense" };
 
+import { requireManager } from "@/lib/auth/server";
+
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireManager();
   const { id } = await params;
   const supabase = createClient();
 

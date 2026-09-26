@@ -28,7 +28,14 @@ function revalidateProductPaths(id?: string) {
   if (id) revalidatePath(`/products/${id}`);
 }
 
+import { getAuthRole } from "@/lib/auth/server";
+
 export async function createProduct(input: ProductInput): Promise<ActionResult<{ id: string }>> {
+  const role = await getAuthRole();
+  if (role !== "inventory_manager") {
+    return { ok: false, error: "Only inventory managers have permission to create products." };
+  }
+
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message, fieldErrors: zodFieldErrors(parsed.error) };
@@ -106,6 +113,11 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
 }
 
 export async function updateProduct(id: string, input: ProductUpdateInput): Promise<ActionResult> {
+  const role = await getAuthRole();
+  if (role !== "inventory_manager") {
+    return { ok: false, error: "Only inventory managers have permission to edit products." };
+  }
+
   const parsed = productUpdateSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message, fieldErrors: zodFieldErrors(parsed.error) };
@@ -141,6 +153,11 @@ export async function updateProduct(id: string, input: ProductUpdateInput): Prom
 
 /** Reorder-rules page: edits only reorder_point/reorder_quantity. */
 export async function updateReorderRule(id: string, input: ReorderRuleInput): Promise<ActionResult> {
+  const role = await getAuthRole();
+  if (role !== "inventory_manager") {
+    return { ok: false, error: "Only inventory managers have permission to manage reorder rules." };
+  }
+
   const parsed = reorderRuleSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message, fieldErrors: zodFieldErrors(parsed.error) };
@@ -159,6 +176,11 @@ export async function updateReorderRule(id: string, input: ReorderRuleInput): Pr
 }
 
 export async function setProductActive(id: string, active: boolean): Promise<ActionResult> {
+  const role = await getAuthRole();
+  if (role !== "inventory_manager") {
+    return { ok: false, error: "Only inventory managers have permission to change product status." };
+  }
+
   const supabase = createClient();
   const { error } = await supabase.from("products").update({ active }).eq("id", id);
   if (error) return { ok: false, error: friendlyDbError(error, "setProductActive") };

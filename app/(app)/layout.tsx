@@ -8,17 +8,23 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { TopbarSearch } from "@/components/layout/topbar-search";
 import { LegalFooterLinks } from "@/components/shared/legal-links";
+import { getAuthenticatedUser } from "@/lib/auth/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const clerkUser = await currentUser();
   if (!clerkUser) redirect("/sign-in");
 
+  const user = await getAuthenticatedUser();
+
   const fullName =
+    user.fullName ||
     clerkUser.fullName ||
     clerkUser.firstName ||
     clerkUser.primaryEmailAddress?.emailAddress ||
     "User";
-  const roleLabel = "Inventory Manager";
+
+  const roleLabel =
+    user.role === "inventory_manager" ? "Inventory Manager" : "Warehouse Staff";
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -26,12 +32,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="flex h-14 shrink-0 items-center border-b px-4">
           <Logo compact />
         </div>
-        <SidebarNav />
+        <SidebarNav role={user.role} />
       </aside>
 
       <div className="lg:pl-60">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
-          <MobileNav />
+          <MobileNav role={user.role} />
           <div className="lg:hidden">
             <Logo compact />
           </div>

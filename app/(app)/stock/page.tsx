@@ -12,7 +12,11 @@ export const metadata = { title: "Stock | StockSense" };
 
 type SearchParams = { q?: string; category?: string };
 
+import { getAuthRole } from "@/lib/auth/server";
+
 export default async function StockPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const role = await getAuthRole();
+  const isManager = role === "inventory_manager";
   const sp = await searchParams;
   const supabase = createClient();
   const { data: categories, error } = await supabase.from("product_categories").select("id,name").eq("active", true).order("name");
@@ -22,11 +26,21 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Stock"
-        description="Current on-hand and free-to-use quantities across all locations"
+        description={
+          isManager
+            ? "Current on-hand and free-to-use quantities across all locations"
+            : "Current on-hand quantities across your assigned warehouse facilities"
+        }
         actions={
-          <Link href="/operations/adjustments/new">
-            <Button>Update Stock</Button>
-          </Link>
+          isManager ? (
+            <Link href="/operations/adjustments/new">
+              <Button>Update Stock</Button>
+            </Link>
+          ) : (
+            <Link href="/stock-counting/new">
+              <Button>Submit Count</Button>
+            </Link>
+          )
         }
       />
 

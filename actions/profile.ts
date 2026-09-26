@@ -23,7 +23,7 @@ export async function updateProfile(input: UpdateProfileInput): Promise<ActionRe
       phone: phone ? phone : null,
       avatar_url: avatarUrl ? avatarUrl : null,
     })
-    .eq("id", clerkUser.id);
+    .eq("clerk_user_id", clerkUser.id);
 
   if (error) return { ok: false, error: friendlyDbError(error, "profile update") };
 

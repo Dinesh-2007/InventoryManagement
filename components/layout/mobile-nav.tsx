@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Logo } from "@/components/brand/logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 
-export function MobileNav() {
+export function MobileNav({ role = "inventory_manager" }: { role?: "inventory_manager" | "warehouse_staff" }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -22,7 +22,7 @@ export function MobileNav() {
             <Logo compact />
           </SheetTitle>
         </SheetHeader>
-        <SidebarNav onNavigate={() => setOpen(false)} />
+        <SidebarNav role={role} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

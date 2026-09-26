@@ -14,9 +14,12 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { requireManager } from "@/lib/auth/server";
+
 const PAGE_SIZE = 20;
 
 export default async function AdjustmentsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireManager();
   const sp = await searchParams;
   const page = parsePage(sp.page);
   const q = sanitizeSearch(typeof sp.q === "string" ? sp.q : undefined);

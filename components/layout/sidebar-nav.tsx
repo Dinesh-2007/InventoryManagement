@@ -7,15 +7,19 @@ import {
   ArrowLeftRight,
   Boxes,
   Building2,
+  CheckSquare,
+  ClipboardCheck,
   ClipboardList,
   History,
   LayoutDashboard,
+  Layers,
   MapPin,
   Package,
   PackageCheck,
   Settings2,
   Tags,
   Truck,
+  User,
   Users,
   Warehouse,
 } from "lucide-react";
@@ -24,7 +28,7 @@ import { cn } from "@/lib/utils";
 type NavItem = { href: string; label: string; icon: LucideIcon };
 type NavGroup = { label: string; items: NavItem[] };
 
-const GROUPS: NavGroup[] = [
+const MANAGER_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
@@ -53,6 +57,39 @@ const GROUPS: NavGroup[] = [
       { href: "/settings/customers", label: "Customers", icon: Building2 },
     ],
   },
+  {
+    label: "Account",
+    items: [
+      { href: "/profile", label: "Profile", icon: User },
+    ],
+  },
+];
+
+const WAREHOUSE_GROUPS: NavGroup[] = [
+  {
+    label: "Warehouse Tasks",
+    items: [
+      { href: "/tasks", label: "My Tasks", icon: CheckSquare },
+      { href: "/picking", label: "Picking", icon: PackageCheck },
+      { href: "/shelving", label: "Shelving", icon: Layers },
+      { href: "/operations/transfers", label: "Internal Transfers", icon: ArrowLeftRight },
+      { href: "/stock-counting", label: "Stock Counting", icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: "Inventory",
+    items: [
+      { href: "/products", label: "Products", icon: Package },
+      { href: "/stock", label: "Stock", icon: Boxes },
+      { href: "/move-history", label: "Move History", icon: History },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href: "/profile", label: "Profile", icon: User },
+    ],
+  },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -65,17 +102,32 @@ const linkClass = (active: boolean) =>
     active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
   );
 
-export function SidebarNav({ onNavigate, className }: { onNavigate?: () => void; className?: string }) {
+export function SidebarNav({
+  role = "inventory_manager",
+  onNavigate,
+  className,
+}: {
+  role?: "inventory_manager" | "warehouse_staff";
+  onNavigate?: () => void;
+  className?: string;
+}) {
   const pathname = usePathname();
+  const isStaff = role === "warehouse_staff";
+  const dashboardHref = isStaff ? "/dashboard/warehouse" : "/dashboard/manager";
+  const groups = isStaff ? WAREHOUSE_GROUPS : MANAGER_GROUPS;
 
   return (
     <nav className={cn("flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4", className)}>
-      <Link href="/dashboard" onClick={onNavigate} className={linkClass(isActive(pathname, "/dashboard"))}>
+      <Link
+        href={dashboardHref}
+        onClick={onNavigate}
+        className={linkClass(isActive(pathname, dashboardHref) || (pathname === "/dashboard"))}
+      >
         <LayoutDashboard className="size-4" />
         Dashboard
       </Link>
 
-      {GROUPS.map((group) => (
+      {groups.map((group) => (
         <div key={group.label} className="flex flex-col gap-1">
           <div className="px-2.5 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{group.label}</div>
           {group.items.map((item) => (

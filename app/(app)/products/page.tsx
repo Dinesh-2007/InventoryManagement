@@ -12,7 +12,11 @@ export const metadata = { title: "Products | StockSense" };
 
 type SearchParams = { q?: string; category?: string; stock?: string; sort?: string; page?: string };
 
+import { getAuthRole } from "@/lib/auth/server";
+
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const role = await getAuthRole();
+  const isManager = role === "inventory_manager";
   const sp = await searchParams;
   const supabase = createClient();
   const { data: categories, error } = await supabase.from("product_categories").select("id,name").eq("active", true).order("name");
@@ -24,9 +28,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         title="Products"
         description="Manage your inventory products"
         actions={
-          <Link href="/products/new">
-            <Button>New Product</Button>
-          </Link>
+          isManager ? (
+            <Link href="/products/new">
+              <Button>New Product</Button>
+            </Link>
+          ) : undefined
         }
       />
 

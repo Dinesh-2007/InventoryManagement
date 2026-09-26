@@ -6,6 +6,8 @@ import { friendlyDbError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/action-result";
 import { adjustmentSchema, type AdjustmentInput } from "@/lib/validations/adjustments";
 
+import { getAuthRole } from "@/lib/auth/server";
+
 /**
  * Inserts a draft adjustment + its items (counted_quantity only; system_quantity
  * and difference are filled server-side by `apply_adjustment`). When `mode` is
@@ -15,6 +17,11 @@ import { adjustmentSchema, type AdjustmentInput } from "@/lib/validations/adjust
 export async function createAdjustment(input: AdjustmentInput, mode: "draft" | "validate"): Promise<ActionResult<{ id: string }>> {
   const parsed = adjustmentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const role = await getAuthRole();
+  if (role === "warehouse_staff" && mode === "validate") {
+    return { ok: false, error: "Warehouse staff can only submit count requests as drafts for manager review." };
+  }
 
   const supabase = createClient();
 
@@ -46,10 +53,16 @@ export async function createAdjustment(input: AdjustmentInput, mode: "draft" | "
   }
 
   revalidatePath("/operations/adjustments");
-  return { ok: true, data: { id: adjustment.id }, message: mode === "validate" ? "Adjustment applied." : "Adjustment saved as draft." };
+  revalidatePath("/stock-counting");
+  return { ok: true, data: { id: adjustment.id }, message: mode === "validate" ? "Adjustment applied." : "Stock count submitted for manager approval." };
 }
 
 export async function applyAdjustmentAction(id: string): Promise<ActionResult> {
+  const role = await getAuthRole();
+  if (role !== "inventory_manager") {
+    return { ok: false, error: "Only inventory managers can apply adjustments to stock." };
+  }
+
   const supabase = createClient();
   const { error } = await supabase.rpc("apply_adjustment", { p_adjustment_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "applyAdjustment") };
@@ -60,6 +73,10 @@ export async function applyAdjustmentAction(id: string): Promise<ActionResult> {
 }
 
 export async function cancelAdjustmentAction(id: string): Promise<ActionResult> {
+  const role = await getAuthRole();
+  if (role !== "inventory_manager") {
+    return { ok: false, error: "Only inventory managers can cancel adjustments." };
+  }
   const supabase = createClient();
   const { error } = await supabase.rpc("cancel_adjustment", { p_adjustment_id: id });
   if (error) return { ok: false, error: friendlyDbError(error, "cancelAdjustment") };

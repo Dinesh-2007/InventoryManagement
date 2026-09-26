@@ -63,7 +63,11 @@ async function fetchMovements(
   return (data ?? []) as LedgerRow[];
 }
 
+import { getAuthRole } from "@/lib/auth/server";
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const role = await getAuthRole();
+  const isManager = role === "inventory_manager";
   const { id } = await params;
   const supabase = createClient();
 
@@ -90,11 +94,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         title={product.name}
         description={product.sku}
         actions={
-          <Link href={`/products/${id}/edit`}>
-            <Button>
-              <Pencil /> Edit
-            </Button>
-          </Link>
+          isManager ? (
+            <Link href={`/products/${id}/edit`}>
+              <Button>
+                <Pencil /> Edit
+              </Button>
+            </Link>
+          ) : undefined
         }
       />
 

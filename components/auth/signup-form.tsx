@@ -2,18 +2,36 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, BarChart3, Warehouse } from "lucide-react";
 import { toast } from "sonner";
 
-import { signUp } from "@/actions/auth";
+import { clerkSignUp } from "@/actions/auth-clerk";
 import { signupSchema, type SignupInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { cn } from "@/lib/utils";
+
+const ROLES = [
+  {
+    value: "inventory_manager" as const,
+    label: "Inventory Manager",
+    description: "Full access to inventory, reports and settings",
+    icon: BarChart3,
+  },
+  {
+    value: "warehouse_staff" as const,
+    label: "Warehouse Staff",
+    description: "Operational tasks: picking, shelving and transfers",
+    icon: Warehouse,
+  },
+];
 
 export function SignupForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -22,26 +40,34 @@ export function SignupForm() {
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { fullName: "", email: "", loginId: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      fullName: "",
+      email: "",
+      loginId: "",
+      role: undefined,
+      password: "",
+      confirmPassword: "",
+    },
   });
+
+  const selectedRole = form.watch("role");
 
   function onSubmit(values: SignupInput) {
     setFormError(null);
     startTransition(async () => {
-      const result = await signUp(values);
-      if (result) {
-        if (!result.ok) {
-          setFormError(result.error);
-          toast.error(result.error);
-          if (result.fieldErrors) {
-            for (const [field, message] of Object.entries(result.fieldErrors)) {
-              form.setError(field as keyof SignupInput, { message });
-            }
+      const result = await clerkSignUp(values);
+      if (!result) return;
+      if (!result.ok) {
+        setFormError(result.error);
+        toast.error(result.error);
+        if (result.fieldErrors) {
+          for (const [field, message] of Object.entries(result.fieldErrors)) {
+            form.setError(field as keyof SignupInput, { message });
           }
-        } else if (result.message) {
-          setSuccessMessage(result.message);
-          toast.success(result.message);
         }
+      } else if (result.message) {
+        setSuccessMessage(result.message);
+        toast.success(result.message);
       }
     });
   }
@@ -54,7 +80,7 @@ export function SignupForm() {
         </div>
         <p className="text-sm text-foreground">{successMessage}</p>
         <Button render={<Link href="/login" />} nativeButton={false}>
-          Back to login
+          Sign in now
         </Button>
       </div>
     );
@@ -68,6 +94,51 @@ export function SignupForm() {
             {formError}
           </div>
         )}
+
+        {/* Role Selection */}
+        <fieldset>
+          <legend className="mb-2 text-sm font-medium text-foreground">Choose your role</legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {ROLES.map((r) => {
+              const isSelected = selectedRole === r.value;
+              return (
+                <label
+                  key={r.value}
+                  htmlFor={`role-${r.value}`}
+                  className={cn(
+                    "relative flex cursor-pointer flex-col gap-1.5 rounded-xl border-2 p-4 transition-all duration-150",
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border bg-card hover:border-primary/50 hover:bg-muted/30"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    id={`role-${r.value}`}
+                    value={r.value}
+                    className="sr-only"
+                    {...form.register("role")}
+                  />
+                  <div className="flex items-center gap-2">
+                    <r.icon
+                      className={cn("size-4 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")}
+                    />
+                    <span className={cn("text-sm font-semibold", isSelected ? "text-primary" : "text-foreground")}>
+                      {r.label}
+                    </span>
+                    {isSelected && (
+                      <span className="ml-auto h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-snug">{r.description}</p>
+                </label>
+              );
+            })}
+          </div>
+          {form.formState.errors.role && (
+            <p className="mt-1.5 text-xs text-destructive">{form.formState.errors.role.message}</p>
+          )}
+        </fieldset>
 
         <Field data-invalid={!!form.formState.errors.fullName}>
           <FieldLabel htmlFor="fullName">Full Name</FieldLabel>

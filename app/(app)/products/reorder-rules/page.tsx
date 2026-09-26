@@ -8,9 +8,12 @@ import { fetchStockOverview } from "@/components/stock/stock-queries.server";
 import { formatQty } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+import { requireManager } from "@/lib/auth/server";
+
 export const metadata = { title: "Reorder Rules | StockSense" };
 
 export default async function ReorderRulesPage() {
+  await requireManager();
   const supabase = createClient();
   const [rows, categoriesRes] = await Promise.all([
     fetchStockOverview(supabase),
