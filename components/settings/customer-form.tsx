@@ -7,7 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { createCustomer, updateCustomer, customerSchema, type CustomerInput } from "@/actions/customers";
+import { createCustomer, updateCustomer } from "@/actions/customers";
+import { customerSchema, type CustomerInput } from "@/lib/validations/customers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";

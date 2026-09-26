@@ -9,6 +9,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TransferActions } from "@/components/transfers/transfer-actions";
 import { cn } from "@/lib/utils";
 
+type TransferDetail = {
+  id: string;
+  reference: string;
+  status: "draft" | "ready" | "done" | "canceled";
+  scheduled_date: string;
+  notes: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+  done_at: string | null;
+  canceled_at: string | null;
+  source_warehouse: { name: string } | null;
+  source_location: { name: string } | null;
+  dest_warehouse: { name: string } | null;
+  dest_location: { name: string } | null;
+  responsible: { full_name: string } | null;
+};
+
+type TransferItemRow = { id: string; quantity: number; product: { name: string; sku: string; unit_of_measure: string } | null };
+
+type LedgerRow = { id: string; quantity: number; product: { name: string } | null; from_loc: { name: string } | null; to_loc: { name: string } | null };
+
 export default async function TransferDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -24,6 +45,7 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
         "responsible:profiles!internal_transfers_responsible_id_fkey(full_name)",
     )
     .eq("id", id)
+    .returns<TransferDetail[]>()
     .maybeSingle();
   if (error) console.error("[transfer detail]", error);
   if (!transfer) notFound();
@@ -31,18 +53,20 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
   const { data: items } = await supabase
     .from("internal_transfer_items")
     .select("id,quantity,product:products(name,sku,unit_of_measure)")
-    .eq("transfer_id", id);
+    .eq("transfer_id", id)
+    .returns<TransferItemRow[]>();
 
   // stock_ledger is owned by the DB agent's parallel migration; select defensively
   // so this page still renders if it hasn't landed yet.
-  let ledgerRows: { id: string; quantity: number; product?: { name: string } | null; from_loc?: { name: string } | null; to_loc?: { name: string } | null }[] = [];
+  let ledgerRows: LedgerRow[] = [];
   let ledgerUnavailable = false;
   if (transfer.status === "done") {
     const { data: ledger, error: ledgerError } = await supabase
       .from("stock_ledger")
       .select("id,quantity,product:products(name),from_loc:locations!stock_ledger_from_location_id_fkey(name),to_loc:locations!stock_ledger_to_location_id_fkey(name)")
       .eq("reference_type", "transfer")
-      .eq("reference_id", id);
+      .eq("reference_id", id)
+      .returns<LedgerRow[]>();
     if (ledgerError) {
       console.error("[transfer detail] stock_ledger unavailable", ledgerError);
       ledgerUnavailable = true;

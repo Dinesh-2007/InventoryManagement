@@ -32,7 +32,7 @@ export default async function LocationsPage({ searchParams }: { searchParams: Pr
         title="Locations"
         description="Manage locations across all warehouses"
         actions={
-          <Button render={<Link href="/settings/locations/new" />}>
+          <Button render={<Link href="/settings/locations/new" />} nativeButton={false}>
             <Plus /> New Location
           </Button>
         }
@@ -54,13 +54,14 @@ async function LocationsTable({ page, q, warehouse, searchParams }: {
   const supabase = await createClient();
   let query = supabase
     .from("locations")
-    .select("id,name,short_code,active,warehouse:warehouses!locations_warehouse_id_fkey(id,name)", { count: "exact" })
-    .order("name")
-    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+    .select("id,name,short_code,active,warehouse:warehouses!locations_warehouse_id_fkey(id,name)", { count: "exact" });
   if (q) query = query.or(`name.ilike.%${q}%,short_code.ilike.%${q}%`);
   if (warehouse) query = query.eq("warehouse_id", warehouse);
 
-  const { data, count, error } = await query;
+  const { data, count, error } = await query
+    .order("name")
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+    .returns<{ id: string; name: string; short_code: string; active: boolean; warehouse: { id: string; name: string } | null }[]>();
   if (error) console.error("[locations list]", error);
   const rows = data ?? [];
 
@@ -71,7 +72,7 @@ async function LocationsTable({ page, q, warehouse, searchParams }: {
         title="No locations found"
         description="Create a location inside a warehouse to start tracking stock there."
         actions={
-          <Button render={<Link href="/settings/locations/new" />}>
+          <Button render={<Link href="/settings/locations/new" />} nativeButton={false}>
             <Plus /> New Location
           </Button>
         }
@@ -102,7 +103,7 @@ async function LocationsTable({ page, q, warehouse, searchParams }: {
               <TableCell><ActiveBadge active={l.active} /></TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
-                  <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/settings/locations/${l.id}`} />}>
+                  <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/settings/locations/${l.id}`} />} nativeButton={false}>
                     <Pencil />
                   </Button>
                   <ToggleActiveButton active={l.active} label={l.name} onToggle={(next) => setLocationActive(l.id, next)} />

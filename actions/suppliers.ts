@@ -1,19 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/action-result";
-
-export const supplierSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(120, "Max 120 characters"),
-  contactPerson: z.string().trim().max(120).optional().or(z.literal("")),
-  phone: z.string().trim().max(30).optional().or(z.literal("")),
-  email: z.union([z.email("Enter a valid email"), z.literal("")]).optional(),
-  address: z.string().trim().max(300).optional().or(z.literal("")),
-});
-export type SupplierInput = z.infer<typeof supplierSchema>;
+import { supplierSchema, type SupplierInput } from "@/lib/validations/suppliers";
 
 function toRow(v: SupplierInput) {
   return {

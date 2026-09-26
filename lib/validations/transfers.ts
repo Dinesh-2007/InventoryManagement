@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const transferLineSchema = z.object({
   productId: z.uuid(),
-  quantity: z.coerce.number().positive("Quantity must be greater than 0"),
+  quantity: z.number().positive("Quantity must be greater than 0"),
 });
 
 export const transferSchema = z

@@ -68,6 +68,15 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
   }
 
   if (initialStock > 0 && data.initial_location_id) {
+    const { data: location, error: locationError } = await supabase
+      .from("locations")
+      .select("warehouse_id")
+      .eq("id", data.initial_location_id)
+      .single();
+    if (locationError || !location) {
+      return { ok: false, error: friendlyDbError(locationError, "createProduct:location") };
+    }
+
     const { error: balanceError } = await supabase
       .from("inventory_balances")
       .upsert(
@@ -80,7 +89,9 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
 
     const { error: ledgerError } = await supabase.from("stock_ledger").insert({
       product_id: product.id,
+      warehouse_id: location.warehouse_id,
       location_id: data.initial_location_id,
+      to_location_id: data.initial_location_id,
       movement_type: "ADJUSTMENT",
       reason: "initial_stock",
       quantity: initialStock,

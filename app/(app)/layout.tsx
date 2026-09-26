@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -74,12 +75,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium text-foreground">{fullName}</span>
-                  <span className="text-xs font-normal text-muted-foreground">{profile?.email ?? user.email}</span>
-                </div>
-              </DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-foreground">{fullName}</span>
+                    <span className="text-xs font-normal text-muted-foreground">{profile?.email ?? user.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem render={<Link href="/profile" />}>
                 <User className="size-4" />

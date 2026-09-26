@@ -27,7 +27,7 @@ export default async function WarehousesPage({ searchParams }: { searchParams: P
         title="Warehouses"
         description="Manage your warehouses"
         actions={
-          <Button render={<Link href="/settings/warehouses/new" />}>
+          <Button render={<Link href="/settings/warehouses/new" />} nativeButton={false}>
             <Plus /> New Warehouse
           </Button>
         }
@@ -62,7 +62,7 @@ async function WarehousesTable({ page, q, searchParams }: { page: number; q: str
         title="No warehouses found"
         description="Create a warehouse to start organizing your stock locations."
         actions={
-          <Button render={<Link href="/settings/warehouses/new" />}>
+          <Button render={<Link href="/settings/warehouses/new" />} nativeButton={false}>
             <Plus /> New Warehouse
           </Button>
         }
@@ -91,7 +91,7 @@ async function WarehousesTable({ page, q, searchParams }: { page: number; q: str
               <TableCell><ActiveBadge active={w.active} /></TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
-                  <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/settings/warehouses/${w.id}`} />}>
+                  <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/settings/warehouses/${w.id}`} />} nativeButton={false}>
                     <Pencil />
                   </Button>
                   <ToggleActiveButton active={w.active} label={w.name} onToggle={(next) => setWarehouseActive(w.id, next)} />

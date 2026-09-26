@@ -14,7 +14,7 @@ export default function NotFound() {
         <h1 className="text-2xl font-semibold tracking-tight">Page not found</h1>
         <p className="mt-1 text-sm text-muted-foreground">The page you&apos;re looking for doesn&apos;t exist or has moved.</p>
       </div>
-      <Button render={<Link href="/dashboard" />}>Back to Dashboard</Button>
+      <Button render={<Link href="/dashboard" />} nativeButton={false}>Back to Dashboard</Button>
     </div>
   );
 }

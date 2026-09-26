@@ -22,7 +22,7 @@ export const adjustmentReasonEnum = z.enum([
 
 export const adjustmentLineSchema = z.object({
   productId: z.uuid(),
-  countedQuantity: z.coerce.number().min(0, "Must be 0 or greater"),
+  countedQuantity: z.number().min(0, "Must be 0 or greater"),
 });
 
 export const adjustmentSchema = z

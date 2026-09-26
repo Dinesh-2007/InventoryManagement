@@ -17,16 +17,14 @@ export type AdjustmentProductOption = { id: string; name: string; sku: string; u
  * changes the location or adds/removes product rows.
  */
 function useSystemQuantity(productId: string, locationId: string) {
-  const [qty, setQty] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const key = `${productId}:${locationId}`;
+  // Keyed result so "loading" is derived (result for a stale key) rather than
+  // set synchronously in the effect body, which avoids extra cascading renders.
+  const [result, setResult] = useState<{ key: string; qty: number | null } | null>(null);
 
   useEffect(() => {
-    if (!productId || !locationId) {
-      setQty(null);
-      return;
-    }
+    if (!productId || !locationId) return;
     let active = true;
-    setLoading(true);
     const supabase = createClient();
     supabase
       .from("stock_by_location")
@@ -36,20 +34,18 @@ function useSystemQuantity(productId: string, locationId: string) {
       .maybeSingle()
       .then(({ data, error }) => {
         if (!active) return;
-        if (error) {
-          console.error("[adjustment-line] system quantity fetch failed", error);
-          setQty(null);
-        } else {
-          setQty(data ? Number(data.quantity_on_hand) : 0);
-        }
-        setLoading(false);
+        if (error) console.error("[adjustment-line] system quantity fetch failed", error);
+        setResult({ key, qty: error ? null : data ? Number(data.quantity_on_hand) : 0 });
       });
     return () => {
       active = false;
     };
-  }, [productId, locationId]);
+  }, [productId, locationId, key]);
 
-  return { qty, loading };
+  // No location selected yet, or the fetch for the current key hasn't resolved: no stale value.
+  if (!productId || !locationId) return { qty: null, loading: false };
+  if (result?.key !== key) return { qty: null, loading: true };
+  return { qty: result.qty, loading: false };
 }
 
 export function AdjustmentLineRow({

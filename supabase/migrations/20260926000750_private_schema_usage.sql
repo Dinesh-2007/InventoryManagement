@@ -1,0 +1,23 @@
+-- =============================================================================
+-- StockSense — fix: restore USAGE on schema private
+-- 20260926000100_core_schema.sql revokes ALL (USAGE + CREATE) on schema
+-- `private` from public/anon/authenticated. CREATE should stay revoked, but
+-- stripping USAGE too is a bug: many trigger functions in `private` call
+-- OTHER `private.*` functions by schema-qualified name inside their body
+-- (e.g. private.set_updated_at() -> private.app_now()), and those inner
+-- calls are planned/executed as ordinary SQL under the CURRENT role at
+-- runtime — which requires USAGE on the schema to resolve the qualified
+-- name, even though the function itself grants EXECUTE to PUBLIC by
+-- default. Without USAGE, every UPDATE/INSERT that fires such a trigger
+-- (i.e. almost every write in the app: profiles, products, receipts,
+-- deliveries, ... — anything with an `_updated_at` trigger) fails with
+-- "permission denied for schema private" for `authenticated`/`service_role`.
+--
+-- This does NOT expose the schema over the API: PostgREST only serves the
+-- schemas listed in supabase/config.toml (`public`, `graphql_public`), so
+-- `private` stays unreachable as a REST resource regardless of this grant.
+-- CREATE on the schema remains revoked, so clients still cannot add objects
+-- there.
+-- =============================================================================
+
+grant usage on schema private to anon, authenticated, service_role;

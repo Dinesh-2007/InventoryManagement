@@ -52,7 +52,7 @@ async function fetchMovements(
 ): Promise<LedgerRow[]> {
   const { data, error } = await supabase
     .from("stock_ledger")
-    .select("id,movement_type,quantity,reference_type,reference_id,created_at,location_id,locations(name,warehouses(name))")
+    .select("id,movement_type,quantity,reference_type,reference_id,created_at,location_id,locations!stock_ledger_location_id_fkey(name,warehouses(name))")
     .eq("product_id", productId)
     .order("created_at", { ascending: false })
     .limit(20);

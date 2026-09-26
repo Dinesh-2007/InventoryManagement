@@ -15,6 +15,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const PAGE_SIZE = 20;
 
+type TransferRow = {
+  id: string;
+  reference: string;
+  scheduled_date: string;
+  status: "draft" | "ready" | "done" | "canceled";
+  source_warehouse: { name: string } | null;
+  source_location: { name: string } | null;
+  dest_warehouse: { name: string } | null;
+  dest_location: { name: string } | null;
+};
+
 export default async function TransfersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const page = parsePage(sp.page);
@@ -31,7 +42,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
         title="Internal Transfers"
         description="Move stock between warehouses and locations"
         actions={
-          <Button render={<Link href="/operations/transfers/new" />}>
+          <Button render={<Link href="/operations/transfers/new" />} nativeButton={false}>
             <Plus /> New Transfer
           </Button>
         }
@@ -71,15 +82,16 @@ async function TransfersTable({ page, q, status, warehouse, searchParams }: {
         "dest_warehouse:warehouses!internal_transfers_dest_warehouse_id_fkey(name)," +
         "dest_location:locations!internal_transfers_dest_location_id_dest_warehouse_id_fkey(name)",
       { count: "exact" },
-    )
-    .order("created_at", { ascending: false })
-    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+    );
 
   if (q) query = query.ilike("reference", `%${q}%`);
   if (status) query = query.eq("status", status);
   if (warehouse) query = query.or(`source_warehouse_id.eq.${warehouse},dest_warehouse_id.eq.${warehouse}`);
 
-  const { data, count, error } = await query;
+  const { data, count, error } = await query
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+    .returns<TransferRow[]>();
   if (error) console.error("[transfers list]", error);
   const rows = data ?? [];
 
@@ -90,7 +102,7 @@ async function TransfersTable({ page, q, status, warehouse, searchParams }: {
         title="No transfers found"
         description="Create an internal transfer to move stock between locations."
         actions={
-          <Button render={<Link href="/operations/transfers/new" />}>
+          <Button render={<Link href="/operations/transfers/new" />} nativeButton={false}>
             <Plus /> New Transfer
           </Button>
         }

@@ -29,7 +29,7 @@ export default async function AdjustmentsPage({ searchParams }: { searchParams: 
         title="Stock Adjustments"
         description="Correct differences between system and physical stock counts"
         actions={
-          <Button render={<Link href="/operations/adjustments/new" />}>
+          <Button render={<Link href="/operations/adjustments/new" />} nativeButton={false}>
             <Plus /> New Adjustment
           </Button>
         }
@@ -55,6 +55,16 @@ export default async function AdjustmentsPage({ searchParams }: { searchParams: 
   );
 }
 
+type AdjustmentRow = {
+  id: string;
+  reference: string;
+  reason: string;
+  status: "draft" | "done" | "canceled";
+  created_at: string;
+  warehouse: { name: string } | null;
+  location: { name: string } | null;
+};
+
 async function AdjustmentsTable({ page, q, status, reason, searchParams }: {
   page: number; q: string; status?: string; reason?: string; searchParams: Record<string, string | string[] | undefined>;
 }) {
@@ -66,15 +76,16 @@ async function AdjustmentsTable({ page, q, status, reason, searchParams }: {
         "warehouse:warehouses!stock_adjustments_warehouse_id_fkey(name)," +
         "location:locations!stock_adjustments_location_id_warehouse_id_fkey(name)",
       { count: "exact" },
-    )
-    .order("created_at", { ascending: false })
-    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+    );
 
   if (q) query = query.ilike("reference", `%${q}%`);
   if (status) query = query.eq("status", status);
   if (reason) query = query.eq("reason", reason);
 
-  const { data, count, error } = await query;
+  const { data, count, error } = await query
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+    .returns<AdjustmentRow[]>();
   if (error) console.error("[adjustments list]", error);
   const rows = data ?? [];
 
@@ -85,7 +96,7 @@ async function AdjustmentsTable({ page, q, status, reason, searchParams }: {
         title="No adjustments found"
         description="Create a stock adjustment to correct system quantities against a physical count."
         actions={
-          <Button render={<Link href="/operations/adjustments/new" />}>
+          <Button render={<Link href="/operations/adjustments/new" />} nativeButton={false}>
             <Plus /> New Adjustment
           </Button>
         }

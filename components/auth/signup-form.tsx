@@ -53,7 +53,9 @@ export function SignupForm() {
           <CheckCircle2 className="size-6" aria-hidden="true" />
         </div>
         <p className="text-sm text-foreground">{successMessage}</p>
-        <Button render={<Link href="/login" />}>Back to login</Button>
+        <Button render={<Link href="/login" />} nativeButton={false}>
+          Back to login
+        </Button>
       </div>
     );
   }
