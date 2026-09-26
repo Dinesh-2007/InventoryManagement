@@ -44,14 +44,33 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     email.split("@")[0] ||
     "User";
 
-  // Role from Clerk publicMetadata (set during signup, never from client)
-  const clerkRole = (clerkUser.publicMetadata?.role as AppRole | undefined) ?? "warehouse_staff";
+  // Role from Clerk publicMetadata (or profile fallback). Never default without asking!
+  let clerkRole = clerkUser.publicMetadata?.role as AppRole | undefined;
 
   const supabase = createClient();
+
+  // If missing from Clerk metadata, check if profile has an assigned role
+  if (!clerkRole) {
+    const { data: existingByEmail } = await supabase
+      .from("profiles")
+      .select("role, id")
+      .or(`clerk_user_id.eq.${clerkId},email.ilike.${email}`)
+      .maybeSingle();
+
+    if (existingByEmail?.role) {
+      clerkRole = existingByEmail.role as AppRole;
+    }
+  }
+
+  // If still no role, prompt user to choose their role
+  if (!clerkRole) {
+    redirect("/onboarding");
+  }
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("clerk_user_id", clerkId)
+    .or(`clerk_user_id.eq.${clerkId},email.ilike.${email}`)
     .maybeSingle();
 
   // If profile doesn't exist yet (e.g., just signed up), create it
@@ -82,7 +101,14 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     };
   }
 
-  // Always use Clerk's role as authoritative (not the DB profile role)
+  // If profile was linked by email but clerk_user_id was not set, link it now
+  if (!profile.clerk_user_id) {
+    await supabase
+      .from("profiles")
+      .update({ clerk_user_id: clerkId, role: clerkRole })
+      .eq("id", profile.id);
+  }
+
   return {
     clerkId,
     email,
@@ -94,12 +120,32 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
 
 /**
  * Gets only the role of the current user without fetching the full profile.
- * Redirects to /sign-in if not authenticated.
+ * Redirects to /sign-in if not authenticated, or /onboarding if role is unset.
  */
 export async function getAuthRole(): Promise<AppRole> {
   const clerkUser = await currentUser();
   if (!clerkUser) redirect("/sign-in");
-  return ((clerkUser.publicMetadata?.role as AppRole | undefined) ?? "warehouse_staff");
+
+  let role = clerkUser.publicMetadata?.role as AppRole | undefined;
+  if (!role) {
+    const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+    const supabase = createClient();
+    const { data: dbProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .or(`clerk_user_id.eq.${clerkUser.id},email.ilike.${email}`)
+      .maybeSingle();
+
+    if (dbProfile?.role) {
+      role = dbProfile.role as AppRole;
+    }
+  }
+
+  if (!role) {
+    redirect("/onboarding");
+  }
+
+  return role;
 }
 
 /**

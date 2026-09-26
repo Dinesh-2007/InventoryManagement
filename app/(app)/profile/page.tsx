@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -6,6 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProfileForm } from "@/components/profile/profile-form";
 
@@ -51,7 +53,12 @@ export default async function ProfilePage() {
               <div className="text-base font-semibold">{fullName}</div>
               <div className="text-sm text-muted-foreground">{profile?.email ?? clerkUser.primaryEmailAddress?.emailAddress}</div>
             </div>
-            <Badge variant="secondary">{roleLabel}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{roleLabel}</Badge>
+              <Button variant="outline" size="xs" render={<Link href="/choose-role" />} nativeButton={false}>
+                Switch Role
+              </Button>
+            </div>
             {profile?.login_id && (
               <>
                 <Separator className="my-1" />

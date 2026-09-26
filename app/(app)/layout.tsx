@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
@@ -49,12 +50,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Button>
 
           <Show when="signed-out">
-            <SignInButton mode="modal">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <Button size="sm">Sign Up</Button>
-            </SignUpButton>
+            <Button variant="ghost" size="sm" render={<Link href="/sign-in" />} nativeButton={false}>
+              Sign In
+            </Button>
+            <Button size="sm" render={<Link href="/signup" />} nativeButton={false}>
+              Sign Up
+            </Button>
           </Show>
 
           <Show when="signed-in">

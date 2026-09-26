@@ -29,12 +29,17 @@ function isPublic(pathname: string): boolean {
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
-  // Legacy URL redirects
+  // Legacy and standard URL redirects
   if (pathname === "/login") {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
-  if (pathname === "/signup") {
-    return NextResponse.redirect(new URL("/sign-up", req.url));
+  if (pathname === "/sign-up" || pathname.startsWith("/sign-up/")) {
+    return NextResponse.redirect(new URL("/signup", req.url));
+  }
+
+  // Allow onboarding and choose-role routes
+  if (pathname === "/onboarding" || pathname === "/choose-role") {
+    return NextResponse.next();
   }
 
   // Allow public and auth paths without any checks

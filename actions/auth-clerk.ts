@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { clerkClient } from "@clerk/nextjs/server";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/action-result";
 import { signupSchema, type SignupInput } from "@/lib/validations/auth";
@@ -145,4 +145,112 @@ export async function clerkSignUp(input: SignupInput): Promise<ActionResult> {
     ok: true,
     message: "Account created! Sign in to access your dashboard.",
   };
+}
+
+/**
+ * Sets or updates the role for the currently authenticated Clerk user.
+ * Used during onboarding or whenever an account is missing role metadata.
+ */
+export async function setAccountRole(
+  role: "inventory_manager" | "warehouse_staff"
+): Promise<ActionResult<{ redirectUrl: string }>> {
+  if (role !== "inventory_manager" && role !== "warehouse_staff") {
+    return { ok: false, error: "Invalid role selected." };
+  }
+
+  const clerkUser = await currentUser();
+  if (!clerkUser) {
+    return { ok: false, error: "You must be signed in to select a role." };
+  }
+
+  const clerk = await clerkClient();
+  await clerk.users.updateUserMetadata(clerkUser.id, {
+    publicMetadata: {
+      role,
+      onboarding_complete: true,
+    },
+  });
+
+  const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+  const fullName =
+    clerkUser.fullName ||
+    clerkUser.firstName ||
+    email.split("@")[0] ||
+    "User";
+
+  const supabase = createClient();
+
+  // Find if profile exists by clerk_user_id or email
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id, clerk_user_id")
+    .or(`clerk_user_id.eq.${clerkUser.id},email.ilike.${email}`)
+    .maybeSingle();
+
+  if (existingProfile) {
+    await supabase
+      .from("profiles")
+      .update({
+        clerk_user_id: clerkUser.id,
+        role,
+        full_name: fullName,
+      })
+      .eq("id", existingProfile.id);
+  } else {
+    await supabase.from("profiles").insert({
+      clerk_user_id: clerkUser.id,
+      email,
+      full_name: fullName,
+      role,
+      status: "active",
+    });
+  }
+
+  if (role === "warehouse_staff") {
+    try {
+      const { data: defaultWh } = await supabase
+        .from("warehouses")
+        .select("id")
+        .eq("active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (defaultWh) {
+        await supabase.from("user_warehouse_access").upsert(
+          {
+            clerk_user_id: clerkUser.id,
+            warehouse_id: defaultWh.id,
+            granted_by: "onboarding",
+          },
+          { onConflict: "clerk_user_id,warehouse_id" }
+        );
+
+        const { data: defaultLocs } = await supabase
+          .from("locations")
+          .select("id")
+          .eq("warehouse_id", defaultWh.id)
+          .eq("active", true)
+          .limit(2);
+
+        if (defaultLocs && defaultLocs.length > 0) {
+          await supabase.from("user_location_access").upsert(
+            defaultLocs.map((loc) => ({
+              clerk_user_id: clerkUser.id,
+              location_id: loc.id,
+              granted_by: "onboarding",
+            })),
+            { onConflict: "clerk_user_id,location_id" }
+          );
+        }
+      }
+    } catch (err) {
+      console.error("[setAccountRole] warehouse assignment error", err);
+    }
+  }
+
+  const redirectUrl =
+    role === "inventory_manager" ? "/dashboard/manager" : "/dashboard/warehouse";
+
+  return { ok: true, data: { redirectUrl } };
 }
