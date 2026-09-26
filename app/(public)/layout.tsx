@@ -1,20 +1,34 @@
 import Link from "next/link";
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import { Logo } from "@/components/brand/logo";
+import { Button } from "@/components/ui/button";
 import { LegalFooterLinks } from "@/components/shared/legal-links";
 
 /**
  * Layout for the public, unauthenticated informational/legal route group:
- * /about, /terms, /privacy, /disclaimer, /contact. These paths are listed
- * in proxy.ts's PUBLIC_PATHS so they render without a signed-in session.
+ * /about, /terms, /privacy, /disclaimer, /contact.
  */
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b">
-        <div className="mx-auto flex w-full max-w-3xl items-center px-4 py-4 sm:px-6">
-          <Link href="/login" aria-label="StockSense home">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
+          <Link href="/" aria-label="StockSense home">
             <Logo />
           </Link>
+          <div className="flex items-center gap-2">
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <Button variant="ghost" size="sm">Sign In</Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button size="sm">Sign Up</Button>
+              </SignUpButton>
+            </Show>
+            <Show when="signed-in">
+              <UserButton />
+            </Show>
+          </div>
         </div>
       </header>
 

@@ -1,61 +1,39 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/supabase/env";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = [
-  "/login",
-  "/signup",
-  "/forgot-password",
-  "/auth",
-  "/about",
-  "/terms",
-  "/privacy",
-  "/disclaimer",
-  "/contact",
-];
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/about(.*)",
+  "/terms(.*)",
+  "/privacy(.*)",
+  "/disclaimer(.*)",
+  "/contact(.*)",
+]);
 
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+export default clerkMiddleware(async (auth, req) => {
+  const { pathname } = req.nextUrl;
 
-  if (!isSupabaseConfigured) {
-    // Without a backend nothing can be authenticated; only the auth screens render.
-    if (isPublic) return NextResponse.next();
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  if (pathname === "/login") {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+  if (pathname === "/signup") {
+    return NextResponse.redirect(new URL("/sign-up", req.url));
   }
 
-  let response = NextResponse.next({ request });
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll: () => request.cookies.getAll(),
-      setAll: (toSet) => {
-        toSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-      },
-    },
-  });
-
-  // getUser() revalidates the JWT with Supabase Auth (getSession() would trust the cookie).
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+  if (!isPublicRoute(req)) {
+    await auth.protect();
   }
-  if (user && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-  return response;
-}
+});
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
+    "/__clerk/:path*",
+  ],
 };
+
